@@ -19,9 +19,9 @@ export const CustomSearchCard = ({ children, title }: { children: React.ReactNod
             justify-center
             items-center`
         }>
-            <div className="flex items-center justify-between w-full">
+            <div className="flex items-center justify-between w-full border-b-2 border-gray-300 pb-4">
                 <h2 className="text-xl">{title}</h2>
-                <span className="text-2xl">
+                <span className="text-2xl text-gray-600">
                     <LuFileSearch />
                 </span>
             </div>

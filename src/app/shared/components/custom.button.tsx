@@ -1,16 +1,32 @@
-export const CustomButton = ({ children } : { children: React.ReactNode }) => {
+import type { JSX } from "react"
+
+export const CustomButton = ({
+    children,
+    icon,
+    onClick
+}: {
+    children: React.ReactNode,
+    icon?: JSX.Element,
+    onClick?: () => void
+}) => {
     return (
         <button
+            onClick={onClick}
             type="submit"
             className={`
                 rounded-lg
-                bg-blue-950
+                flex
+                gap-4
+                justify-center
+                items-center
+                bg-orange-500
                 text-white
-                text-md
                 w-full
+                h-12
                 p-4`
             }>
-                { children }
+            <span className="text-2xl">{icon}</span>
+            <span className="text-lg">{children}</span>
         </button>
     )
 }

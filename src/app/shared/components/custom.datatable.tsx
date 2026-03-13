@@ -46,7 +46,7 @@ export function CustomDataTable<T extends object>({
     }
 
     return (
-        <div className="w-full rounded-xl bg-white shadow-md overflow-hidden">
+        <div className="w-full rounded-xl bg-white shadow-md shadow-gray-400 overflow-hidden">
             {meta && (
                 <DataTablePagination
                     meta={meta}

@@ -6,6 +6,7 @@ import { filtroClientes } from "../../features/clientes/enums/filtro-cliente.enu
 import type { OptionType } from "@/app/shared/types/option.type"
 import { ButtonLoading } from "@/app/shared/components/button.loading"
 import type { FormPesquisaType } from "@/app/shared/types/form-pesquisa.type"
+import { FaSearch } from "react-icons/fa"
 
 export const FormPesquisa = ({ data, onSubmit, isLoading = false }: FormPesquisaType) => {
     const [selectedFilter, setSelectedFilter] = useState<OptionType | null>(null)
@@ -70,10 +71,7 @@ export const FormPesquisa = ({ data, onSubmit, isLoading = false }: FormPesquisa
                         />
                     </div>
 
-                    {/* Campo Dinâmico */}
                     <div className="w-full flex flex-col md:flex-row gap-4">
-
-                        {/* Se for texto */}
                         {selectedFilter?.type === "text" && (
                             <div className="w-full">
                                 <CustomInput
@@ -86,7 +84,6 @@ export const FormPesquisa = ({ data, onSubmit, isLoading = false }: FormPesquisa
 
                         )}
 
-                        {/* Se for data */}
                         {selectedFilter?.type === "date" && (
                             <div className="w-full grid grid-cols-2 flex-col md:flex-row gap-2">
                                 <CustomInput
@@ -113,7 +110,12 @@ export const FormPesquisa = ({ data, onSubmit, isLoading = false }: FormPesquisa
 
                 </div>
                 <span className="self-end w-full md:w-[200px]">
-                    <ButtonLoading isLoading={isLoading}>Consultar</ButtonLoading>
+                    <ButtonLoading isLoading={isLoading} size="medium">
+                        <span className="flex justify-between p-2 items-center gap-4 w-full">
+                            <FaSearch />
+                            <p>Buscar</p>
+                        </span>
+                    </ButtonLoading>
                 </span>
             </form>
         </CustomSearchCard>
