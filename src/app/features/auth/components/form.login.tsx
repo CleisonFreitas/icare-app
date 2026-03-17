@@ -19,7 +19,7 @@ export const FormLogin = () => {
 
     const [errors, setErrors] = useState<AuthFormType>(initialData);
 
-    const { mutationLogin,  } = useAuth();
+    const { mutationLogin } = useAuth();
 
     const navigate = useNavigate();
 

@@ -1,4 +1,5 @@
 export type EnderecoType = {
+    id?: number;
     cep: string;
     logradouro: string;
     numero: string;
@@ -6,4 +7,5 @@ export type EnderecoType = {
     bairro: string;
     cidade: string;
     uf: string;
+    clienteId?: number;
 }

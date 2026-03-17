@@ -19,13 +19,14 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
       errorMessage,
       textPosition = "left",
       maxLength = 255,
+      required = false,
       ...rest
     },
     ref
   ) => {
     return (
       <div className="flex flex-col gap-2 justify-start items-start">
-        <label htmlFor={id} className="text-blue-950 text-lg">
+        <label htmlFor={id} className={`text-blue-950 text-sm font-semibold ${required ? "after:content-['*'] after:ml-0.5 after:text-red-500" : ""}`}>
           {label}
         </label>
 
@@ -37,14 +38,16 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
           id={id}
           maxLength={maxLength}
           placeholder={placeholder}
+          required={required}
           className={`
             rounded-lg
-            p-3
+            py-2
+            px-4
             w-full
-            text-blue-950
+            text-sm
+            text-gray-800
             shadow-sm
             shadow-gray-300 
-            text-lg
             border
             border-gray-400
             focus:border-blue-950
@@ -55,7 +58,7 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
         />
 
         {errorMessage && (
-          <p className="text-red-500 text-wrap">{errorMessage}</p>
+          <p className="text-red-500 text-wrap text-sm">{errorMessage}</p>
         )}
       </div>
     );

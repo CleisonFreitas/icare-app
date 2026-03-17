@@ -68,6 +68,7 @@ export const FormPesquisa = ({ data, onSubmit, isLoading = false }: FormPesquisa
                             value={selectedFilter?.value || ""}
                             onChange={handleSelectChange}
                             options={data}
+                            required
                         />
                     </div>
 

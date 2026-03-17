@@ -1,25 +1,39 @@
 import { ButtonLoading } from "@/app/shared/components/button.loading"
 import { CustomCard } from "@/app/shared/components/custom.card"
 import { CustomInput } from "@/app/shared/components/custom.input"
-import { CustomSelect } from "@/app/shared/components/custom.select"
 import type { OptionType } from "@/app/shared/types/option.type"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { ContatoType } from "../types/contato.type"
+import type { EnderecoType } from "../types/endereco.type"
 import { FaSave } from "react-icons/fa"
 import type { ClienteType } from "../types/cliente.type"
+import { ContatosEditor, validateContatos, type ContatoErrorType, type ContatosValidationErrors } from "./contatos-editor"
+
+export type ClienteErrorType = {
+    nome?: string;
+    email?: string;
+    documento?: string;
+    data_nascimento?: string;
+    senha?: string;
+    endereco?: Partial<Record<keyof EnderecoType, string>>;
+    contatos?: ContatoErrorType[];
+    geral?: string;
+};
 
 export type FormClienteProps = {
     initialData?: ClienteType;
     onSubmit?: (payload: any) => void;
     isLoading?: boolean;
-}
+    errors?: Partial<ClienteType>;
+};
 
-export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClienteProps) => {
-    const [formData, setFormData] = useState<ClienteType>(initialData || {
+export const FormCliente = ({ initialData, onSubmit, isLoading, errors }: FormClienteProps) => {
+    const defaultFormData: ClienteType = initialData || {
         nome: "",
         email: "",
         documento: "",
         data_nascimento: "",
+        senha: "",
         endereco: {
             cep: "",
             logradouro: "",
@@ -33,14 +47,105 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
             { nome: "", tipo: "", valor: "", preferencial: false },
             { nome: "", tipo: "", valor: "", preferencial: false }
         ]
-    })
+    };
+
+    const [formData, setFormData] = useState<ClienteType>(defaultFormData);
+    const [contatos, setContatos] = useState<ContatoType[]>(defaultFormData.contatos);
+    const [validationErrors, setValidationErrors] = useState<ClienteErrorType>({});
+
+    useEffect(() => {
+        if (initialData) {
+            setFormData(initialData);
+            setContatos(initialData.contatos || []);
+            setValidationErrors({});
+        }
+    }, [initialData]);
+
+    const getFieldError = (field: string, subField?: string, index?: number): string | undefined => {
+        const serverError = errors as ClienteErrorType | undefined;
+
+        if (subField && index !== undefined) {
+            const custom = validationErrors.contatos?.[index]?.[subField as keyof ContatoErrorType];
+            const server = serverError?.contatos?.[index]?.[subField as keyof ContatoErrorType];
+            return custom || server;
+        }
+
+        if (subField) {
+            const custom = (validationErrors as any)[subField];
+            const server = (serverError as any)?.[subField];
+            return custom || server;
+        }
+
+        const custom = (validationErrors as any)[field];
+        const server = (serverError as any)?.[field];
+        return custom || server;
+    };
+
+    const isValidEmail = (email: string) => /^(?:[^@\s]+@[^@\s]+\.[^@\s]+)$/.test(email);
+
+    const hasValidationErrors = (err: ClienteErrorType): boolean => {
+        if (err.geral) return true;
+        if (err.nome || err.email || err.documento || err.data_nascimento || err.senha) return true;
+        if (err.endereco && Object.keys(err.endereco).length > 0) return true;
+        if (err.contatos && err.contatos.some(c => c && Object.keys(c).length > 0)) return true;
+        return false;
+    };
+
+    const validateForm = () => {
+        const newErrors: ClienteErrorType = {};
+
+        if (!formData.nome.trim()) newErrors.nome = "Nome é obrigatório";
+
+        if (!formData.email.trim()) {
+            newErrors.email = "Email é obrigatório";
+        } else if (!isValidEmail(formData.email)) {
+            newErrors.email = "Email inválido";
+        }
+
+        if (!formData.documento.trim()) newErrors.documento = "Documento é obrigatório";
+
+        if (!formData.data_nascimento.trim()) newErrors.data_nascimento = "Data de nascimento é obrigatória";
+
+        if (!formData.id && !formData.senha?.trim()) newErrors.senha = "Senha é obrigatória";
+
+        const enderecoErrors: Partial<Record<keyof EnderecoType, string>> = {};
+
+        if (!formData.endereco.cep.trim()) enderecoErrors.cep = "CEP é obrigatório";
+        if (!formData.endereco.logradouro.trim()) enderecoErrors.logradouro = "Logradouro é obrigatório";
+        if (!formData.endereco.numero.trim()) enderecoErrors.numero = "Número é obrigatório";
+        if (!formData.endereco.bairro.trim()) enderecoErrors.bairro = "Bairro é obrigatório";
+        if (!formData.endereco.cidade.trim()) enderecoErrors.cidade = "Cidade é obrigatória";
+        if (!formData.endereco.uf.trim()) enderecoErrors.uf = "UF é obrigatório";
+
+        if (Object.keys(enderecoErrors).length > 0) newErrors.endereco = enderecoErrors;
+
+        const contatosValidation = validateContatos(contatos);
+
+        if (!contatosValidation.isValid) {
+            newErrors.geral = contatosValidation.errors.geral;
+            newErrors.contatos = contatosValidation.errors.contatos;
+        }
+
+        setValidationErrors(newErrors);
+
+        return !hasValidationErrors(newErrors);
+    };
+
     const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        const contatosValidos = formData.contatos.filter(c => c.tipo && c.valor)
-        const payload = { ...formData, contatos: contatosValidos }
+        if (!validateForm()) return;
 
+        const contatosValidos = validateContatos(contatos).contatosValidos;
+        setFormData(prev => ({ ...prev, contatos: contatosValidos }));
+
+        const payload = { ...formData, contatos: contatosValidos };
         if (onSubmit) onSubmit(payload);
+    }
+
+    const handleContatosChange = (novoContatos: ContatoType[]) => {
+        setContatos(novoContatos);
+        setFormData(prev => ({ ...prev, contatos: novoContatos }));
     }
 
     const opcoesDeContato: OptionType[] = [
@@ -48,60 +153,27 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
         { type: "text", label: "Telefone", value: "TELEFONE" }
     ];
 
-    const [contatos, setContatos] = useState<ContatoType[]>(formData.contatos || [
-        { nome: "", tipo: "", valor: "", preferencial: false },
-        { nome: "", tipo: "", valor: "", preferencial: false }
-    ])
-
-    const getPlaceholder = (tipo: string): string => {
-        switch (tipo) {
-            case "email":
-                return "Digite o seu email de contato"
-            case "telefone":
-                return "Digite seu telefone de contato"
-            default:
-                return "Digite aqui o contato"
-        }
-    }
-
-    const handleSelectChange = (index: number, e: React.ChangeEvent<HTMLSelectElement>) => {
-        const novoContatos = [...contatos]
-        novoContatos[index].tipo = e.target.value
-        setContatos(novoContatos)
-    }
-
-    const handleInputChange = (index: number, value: string) => {
-        const novoContatos = [...contatos]
-        novoContatos[index].valor = value
-        setContatos(novoContatos)
-    }
-
-    const handleNomeContatoChange = (index: number, value: string) => {
-        const novoContatos = [...contatos]
-        novoContatos[index].nome = value
-        setContatos(novoContatos)
-    }
-
-    const handleCheckboxChange = (index: number) => {
-        const novoContatos = [...contatos]
-
-        if (!novoContatos[index].preferencial) {
-            novoContatos.forEach((contato, i) => {
-                if (i !== index) {
-                    contato.preferencial = false
-                }
-            })
-        }
-
-        novoContatos[index].preferencial = !novoContatos[index].preferencial
-        setContatos(novoContatos)
-    }
-
-    const temContatoPrefencialMarcado = contatos.some(c => c.preferencial)
+    const contatoFieldErrors: ContatosValidationErrors = {
+        geral: getFieldError("geral"),
+        contatos: (() => {
+            const serverErrors = (errors as ClienteErrorType)?.contatos || [];
+            const clientErrors = validationErrors.contatos || [];
+            const max = Math.max(serverErrors.length, clientErrors.length);
+            return Array.from({ length: max }, (_, i) => ({
+                ...(serverErrors[i] || {}),
+                ...(clientErrors[i] || {}),
+            }));
+        })(),
+    };
 
     return (
         <CustomCard>
             <form action="POST" onSubmit={handleSubmit} className="w-full flex flex-col gap-8">
+                {getFieldError("geral") && (
+                    <div className="rounded-md bg-red-100 border border-red-300 p-3 text-red-700">
+                        {getFieldError("geral")}
+                    </div>
+                )}
                 {/* Nome, Data de nascimento e Documento */}
                 <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-2">
                     <span className="col-span-2">
@@ -111,6 +183,8 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
                             id="nome"
                             defaultValue={formData?.nome}
                             placeholder="Digite o nome completo"
+                            required
+                            errorMessage={getFieldError("nome")}
                         />
                     </span>
                     <span className="col-span-1 grid grid-cols-1 md:grid-cols-2 w-full gap-2">
@@ -120,6 +194,8 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
                             id="data_nascimento"
                             type={"date"}
                             defaultValue={formData?.data_nascimento}
+                            errorMessage={getFieldError("data_nascimento")}
+                            required
                         />
                         <CustomInput
                             onChange={(e) => setFormData({ ...formData, documento: e.target.value })}
@@ -127,6 +203,8 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
                             id="documento"
                             defaultValue={formData.documento}
                             placeholder="Digite o CPF do cliente"
+                            errorMessage={getFieldError("documento")}
+                            required
                         />
                     </span>
                 </div>
@@ -139,6 +217,8 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
                         type="email"
                         defaultValue={formData.email}
                         placeholder="Digite o email do cliente"
+                        errorMessage={getFieldError("email")}
+                        required
                     />
                     <CustomInput
                         onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
@@ -147,12 +227,13 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
                         type="password"
                         defaultValue={formData.senha}
                         placeholder="Digite a senha do cliente"
+                        errorMessage={getFieldError("senha")}
+                        required
                     />
                 </div>
 
                 {/* Telefone e Endereço */}
-                <h3 className="text-xl font-semibold">Endereço</h3>
-                <hr />
+                <h3 className="text-md font-semibold border-b-2 pb-2">Endereço</h3>
                 <div className="grid grid-cols-1 md:grid-cols-[calc(30%-0.5rem)_calc(60%-0.5rem)_calc(10%-0.5rem)] gap-2">
                     <CustomInput
                         onChange={(e) => setFormData({ ...formData, endereco: { ...formData.endereco, cep: e.target.value } })}
@@ -160,6 +241,8 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
                         id="cep"
                         defaultValue={formData.endereco.cep}
                         placeholder="Digite o CEP do cliente"
+                        errorMessage={getFieldError("endereco", "cep")}
+                        required
                     />
                     <CustomInput
                         onChange={(e) => setFormData({ ...formData, endereco: { ...formData.endereco, logradouro: e.target.value } })}
@@ -167,6 +250,8 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
                         id="endereco"
                         defaultValue={formData.endereco.logradouro}
                         placeholder="Digite o Endereço do cliente"
+                        errorMessage={getFieldError("endereco", "logradouro")}
+                        required
                     />
                     <CustomInput
                         onChange={(e) => setFormData({ ...formData, endereco: { ...formData.endereco, numero: e.target.value } })}
@@ -174,6 +259,7 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
                         id="numero"
                         defaultValue={formData.endereco.numero}
                         placeholder="Digite o número do endereço"
+                        errorMessage={getFieldError("endereco", "numero")}
                     />
                 </div>
 
@@ -184,6 +270,7 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
                         id="complemento"
                         defaultValue={formData?.endereco.complemento}
                         placeholder="Digite o complemento do endereço"
+                        errorMessage={getFieldError("endereco", "complemento")}
                     />
                     <CustomInput
                         onChange={(e) => setFormData({ ...formData, endereco: { ...formData.endereco, bairro: e.target.value } })}
@@ -191,6 +278,8 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
                         id="bairro"
                         defaultValue={formData?.endereco.bairro}
                         placeholder="Digite o bairro do cliente"
+                        errorMessage={getFieldError("endereco", "bairro")}
+                        required
                     />
                     <CustomInput
                         onChange={(e) => setFormData({ ...formData, endereco: { ...formData.endereco, cidade: e.target.value } })}
@@ -198,6 +287,8 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
                         id="cidade"
                         defaultValue={formData?.endereco.cidade}
                         placeholder="Digite a cidade do cliente"
+                        errorMessage={getFieldError("endereco", "cidade")}
+                        required
                     />
                     <CustomInput
                         onChange={(e) => setFormData({ ...formData, endereco: { ...formData.endereco, uf: e.target.value } })}
@@ -205,56 +296,19 @@ export const FormCliente = ({ initialData, onSubmit, isLoading }: FormClientePro
                         id="uf"
                         defaultValue={formData?.endereco.uf}
                         placeholder="UF"
+                        errorMessage={getFieldError("endereco", "uf")}
+                        required
                     />
                 </div>
 
-                <h3 className="text-xl font-semibold">Telefones</h3>
-                <hr />
-                <div className="grid grid-cols-1 md:grid-cols-[calc(50%-0.5rem)_calc(50%-0.5rem)] gap-2">
-                    {formData.contatos.map((contato, index) => (
-                        <div key={index} className="flex flex-col gap-2 justify-center rounded-lg shadow shadow-gray-700 p-4">
-                            <CustomInput
-                                label={`Nome do contato ${index + 1}`}
-                                onChange={(e) => handleNomeContatoChange(index, e.target.value)}
-                                value={contato.nome}
-                                placeholder={getPlaceholder(contato.tipo)}
-                            />
-                            <div className="flex justify-start items-center gap-2 flex-col md:flex-row">
-                                <span className="w-full md:w-[250px]">
-                                    <CustomSelect
-                                        label={`Contato ${index + 1}`}
-                                        id={`contato${index + 1}`}
-                                        onChange={(e) => handleSelectChange(index, e)}
-                                        value={contato.tipo}
-                                        options={opcoesDeContato}
-                                    />
-                                </span>
-                                <span className="w-full md:mt-7 mt-0">
-                                    <CustomInput
-                                        onChange={(e) => handleInputChange(index, e.target.value)}
-                                        value={contato.valor}
-                                        placeholder={getPlaceholder(contato.tipo)}
-                                    />
-                                </span>
-                                
-                            </div>
-                            <span className="flex items-center gap-2">
-                                <label
-                                    htmlFor={`preferencial${index}`}
-                                    className="text-sm text-gray-600 font-bold"
-                                >Contato preferencial
-                                </label>
-                                <input
-                                    type="checkbox"
-                                    id={`preferencial${index}`}
-                                    checked={contato.preferencial}
-                                    onChange={() => handleCheckboxChange(index)}
-                                    disabled={temContatoPrefencialMarcado && !contato.preferencial}
-                                />
-                            </span>
-                        </div>
-                    ))}
-                </div>
+                <h3 className="text-md font-semibold border-b-2 pb-2">Telefones</h3>
+                <ContatosEditor
+                    contatos={contatos}
+                    onChange={handleContatosChange}
+                    errors={contatoFieldErrors}
+                    opcoesDeContato={opcoesDeContato}
+                    showHeading={false}
+                />
                 <span className="justify-self-end self-end w-full md:w-[200px]">
                     <ButtonLoading isLoading={isLoading || false} size="medium" icon={<FaSave />}>
                         Salvar

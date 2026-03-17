@@ -1,9 +1,9 @@
 import { useEffect } from "react"
-import { useAuth } from "../contexts/auth.context"
+import { useAuthContext } from "../contexts/auth.context"
 import { ApiConfig } from "@/app/core/api/api.config"
 
 export const useAxiosInterceptor = () => {
-  const { token, logout } = useAuth()
+  const { token, logout } = useAuthContext()
 
   useEffect(() => {
     const requestInterceptor = ApiConfig.interceptors.request.use(

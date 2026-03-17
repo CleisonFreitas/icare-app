@@ -12,6 +12,7 @@ import ConsultaPage from "@/app/features/consultas/pages/consulta.page";
 import VacinaPage from "@/app/features/vacinas/pages/vacina.page";
 import HistoricoMedicoPage from "@/app/features/historico/pages/historico-medico.page";
 import DashboardPage from "@/app/features/dashboard/pages/dashboard.page";
+import ClienteDetalhePage from "@/app/features/clientes/pages/cliente-detalhe.page";
 
 export const router = createBrowserRouter([
     {
@@ -47,6 +48,10 @@ export const router = createBrowserRouter([
                     {
                         path: "/clientes",
                         element: <ClientePage />,
+                    },
+                    {
+                        path: "/cliente/:id",
+                        element: <ClienteDetalhePage />,
                     },
                     {
                         path: "/pets",

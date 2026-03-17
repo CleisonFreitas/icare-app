@@ -14,21 +14,16 @@ type MetaType = {
 type TabelaClienteProps = {
   clientes: ClienteType[]
   meta?: MetaType
-
   onPageChange: (page: number) => void
   onLimitChange: (limit: number) => void
   onSort: (
     field: keyof ClienteType,
     direction: "asc" | "desc"
   ) => void
-  /**
-   * Optional callback for when a row (id cell) is clicked.  If provided
-   * we call this instead of navigating to a detail route.
-   */
   onRowClick?: (cliente: ClienteType) => void
 }
 
-export const TabelaCliente = ({ clientes, meta, onPageChange, onLimitChange, onSort, onRowClick }: TabelaClienteProps) => {
+export const TabelaCliente = ({ clientes, meta, onPageChange, onLimitChange, onSort }: TabelaClienteProps) => {
   const navigate = useNavigate();
 
   const columns: ColumnType<ClienteType>[] = [
@@ -38,11 +33,7 @@ export const TabelaCliente = ({ clientes, meta, onPageChange, onLimitChange, onS
       clickable: true,
       sortable: true,
       onClick: (cliente: ClienteType) => {
-        if (onRowClick) {
-          onRowClick(cliente)
-        } else {
-          navigate(`/cliente/${cliente.id}`)
-        }
+        navigate(`/cliente/${cliente.id}`)
       }
     },
     {

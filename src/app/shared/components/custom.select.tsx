@@ -7,6 +7,7 @@ interface CustomSelectProps
   errorMessage?: string;
   options: OptionType[];
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  required: boolean;
 }
 
 export const CustomSelect = forwardRef<
@@ -22,6 +23,7 @@ export const CustomSelect = forwardRef<
       errorMessage,
       options,
       disabled,
+      required = false,
       ...rest
     },
     ref
@@ -29,7 +31,7 @@ export const CustomSelect = forwardRef<
     return (
       <div className="flex flex-col gap-2 justify-start items-start w-full text-wrap">
         {label && (
-          <label htmlFor={id} className="text-blue-950 text-lg">
+          <label htmlFor={id} className={`text-blue-950 text-sm font-semibold ${required ? "after:content-['*'] after:ml-0.5 after:text-red-500" : ""}`}>
             {label}
           </label>
         )}
@@ -42,13 +44,13 @@ export const CustomSelect = forwardRef<
           disabled={disabled}
           className={`
             rounded-lg
-            px-3
-            py-[14.8px]
+            py-[10px]
+            px-4
             w-full
-            text-blue-950
+            text-gray-800
             shadow-sm
             shadow-gray-300
-            text-lg
+            text-sm
             border
             border-gray-400
             focus:border-blue-950

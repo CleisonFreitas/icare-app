@@ -10,9 +10,9 @@ type ButtonLoadingProps = {
 
 export const ButtonLoading = ({ isLoading, children, disabled, size, icon }: ButtonLoadingProps) => {
   const sizesAvaible = {
-    small: "h-9",
-    medium: "h-12",
-    large: "h-14"
+    small: "h-4",
+    medium: "h-9",
+    large: "h-12"
   };
   return (
     <button
@@ -27,7 +27,7 @@ export const ButtonLoading = ({ isLoading, children, disabled, size, icon }: But
         text-white
         text-md
         w-full
-        p-4
+        p-2
         disabled:opacity-70
         h-
         ${sizesAvaible[size || "large"]}
