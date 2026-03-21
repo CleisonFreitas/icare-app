@@ -1,4 +1,5 @@
 import React, { forwardRef, type InputHTMLAttributes } from "react";
+import { Loading } from "./small.loading";
 
 interface CustomInputProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> {
@@ -6,6 +7,7 @@ interface CustomInputProps
   errorMessage?: string;
   textPosition?: "left" | "right" | "center";
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isLoading?: boolean;
 }
 
 export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
@@ -20,15 +22,19 @@ export const CustomInput = forwardRef<HTMLInputElement, CustomInputProps>(
       textPosition = "left",
       maxLength = 255,
       required = false,
+      isLoading = false,
       ...rest
     },
     ref
   ) => {
     return (
       <div className="flex flex-col gap-2 justify-start items-start">
-        <label htmlFor={id} className={`text-blue-950 text-sm font-semibold ${required ? "after:content-['*'] after:ml-0.5 after:text-red-500" : ""}`}>
-          {label}
-        </label>
+        <span className="flex justify-start gap-2">
+          <label htmlFor={id} className={`text-blue-950 text-sm font-semibold ${required ? "after:content-['*'] after:ml-0.5 after:text-red-500" : ""}`}>
+            {label}
+          </label>
+          {isLoading && <Loading size={'sm'} />}
+        </span>
 
         <input
           ref={ref}

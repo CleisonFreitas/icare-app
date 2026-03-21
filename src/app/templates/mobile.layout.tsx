@@ -11,7 +11,7 @@ type Props = {
 
 export const MobileLayout = ({ menus }: Props) => {
   return (
-    <div className="flex flex-col min-h-screen bg-slate-100 text-blue-950">
+    <div className="flex flex-col min-h-screen bg-white text-blue-950">
       <header className="h-16 bg-blue-950 text-white flex items-center justify-center shadow-md">
         <h1 className="font-semibold text-lg">
           ICare

@@ -16,6 +16,7 @@ import { getNumber } from "@/app/shared/util/get-number.helper";
 import type { EnderecoType } from "../types/endereco.type";
 import type { ContatoType } from "../types/contato.type";
 import { ContatosEditor, validateContatos, type ContatosValidationErrors } from "./contatos-editor";
+import { useViaCepHook } from "@/app/shared/hooks/use.via-cep.hook";
 
 export const DetalhesCliente = ({ cliente }: { cliente?: ClienteType }) => {
     const { update, updateClientAddress, updateClientContacts } = useCliente();
@@ -334,7 +335,33 @@ const InformacoesEndereco = ({
         cidade: endereco.cidade,
         uf: endereco.uf,
         clienteId: clienteId
-    })
+    });
+
+    const [isFetchingCep, setIsFetchingCep] = useState<boolean>(false);
+    const [cepIncorreto, setCepIncorreto] = useState<boolean>(false);
+    const { getByCep } = useViaCepHook();
+
+    const gerarEndereco = async () => {
+        const cep = getNumber(enderecoAtualizado.cep);
+        setIsFetchingCep(true);
+        setCepIncorreto(false);
+        const endereco: Partial<EnderecoType> = await getByCep(cep);
+
+        if (endereco.logradouro === undefined) {
+            setCepIncorreto(true);
+        }
+        setIsFetchingCep(false);
+        
+        setEnderecoAtualizado({
+            ...enderecoAtualizado,
+            logradouro: endereco.logradouro!,
+            bairro: endereco.bairro!,
+            cidade: endereco.cidade!,
+            uf: endereco.uf!,
+            numero: "",
+            complemento: "",
+        });
+    };
 
     const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -361,11 +388,12 @@ const InformacoesEndereco = ({
                     <CustomInput
                         label="CEP:"
                         value={maskerHelper.cep(enderecoAtualizado.cep)}
-                        maxLength={10}
+                        maxLength={9}
                         onChange={(e) =>
                             setEnderecoAtualizado({ ...enderecoAtualizado, cep: getNumber(e.target.value) })
                         }
-                        errorMessage={errors.cep}
+                        errorMessage={cepIncorreto ? "Cep informado não encontrado" : errors.cep}
+                        onBlur={gerarEndereco}
                     />
 
                     <CustomInput
@@ -375,6 +403,7 @@ const InformacoesEndereco = ({
                         onChange={(e) =>
                             setEnderecoAtualizado({ ...enderecoAtualizado, logradouro: e.target.value })
                         }
+                        isLoading={isFetchingCep}
                     />
 
                     <CustomInput
@@ -402,12 +431,14 @@ const InformacoesEndereco = ({
                         onChange={(e) =>
                             setEnderecoAtualizado({ ...enderecoAtualizado, bairro: e.target.value })
                         }
+                        isLoading={isFetchingCep}
                     />
 
                     <CustomInput
                         label="Cidade:"
                         value={enderecoAtualizado.cidade}
                         maxLength={255}
+                        isLoading={isFetchingCep}
                         onChange={(e) =>
                             setEnderecoAtualizado({ ...enderecoAtualizado, cidade: e.target.value })
                         }
@@ -417,6 +448,7 @@ const InformacoesEndereco = ({
                         label="Uf:"
                         value={enderecoAtualizado.uf}
                         maxLength={2}
+                        isLoading={isFetchingCep}
                         onChange={(e) =>
                             setEnderecoAtualizado({ ...enderecoAtualizado, uf: e.target.value })
                         }

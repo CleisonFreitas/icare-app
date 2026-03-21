@@ -111,7 +111,7 @@ export const FormPesquisa = ({ data, onSubmit, isLoading = false }: FormPesquisa
 
                 </div>
                 <span className="self-end w-full md:w-[200px]">
-                    <ButtonLoading isLoading={isLoading} size="medium">
+                    <ButtonLoading isLoading={isLoading} size="large">
                         <span className="flex justify-between p-2 items-center gap-4 w-full">
                             <FaSearch />
                             <p>Buscar</p>

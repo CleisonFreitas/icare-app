@@ -8,6 +8,9 @@ import type { EnderecoType } from "../types/endereco.type"
 import { FaSave } from "react-icons/fa"
 import type { ClienteType } from "../types/cliente.type"
 import { ContatosEditor, validateContatos, type ContatoErrorType, type ContatosValidationErrors } from "./contatos-editor"
+import { useViaCepHook } from "@/app/shared/hooks/use.via-cep.hook"
+import { getNumber } from "@/app/shared/util/get-number.helper"
+import { maskerHelper } from "@/app/shared/util/masker.helper"
 
 export type ClienteErrorType = {
     nome?: string;
@@ -52,6 +55,9 @@ export const FormCliente = ({ initialData, onSubmit, isLoading, errors }: FormCl
     const [formData, setFormData] = useState<ClienteType>(defaultFormData);
     const [contatos, setContatos] = useState<ContatoType[]>(defaultFormData.contatos);
     const [validationErrors, setValidationErrors] = useState<ClienteErrorType>({});
+    const [isFetchingCep, setIsFetchingCep] = useState(false);
+    const [cepError, setCepError] = useState<string | null>(null);
+    const { getByCep } = useViaCepHook();
 
     useEffect(() => {
         if (initialData) {
@@ -166,6 +172,30 @@ export const FormCliente = ({ initialData, onSubmit, isLoading, errors }: FormCl
         })(),
     };
 
+    const gerarEndereco = async () => {
+        const cep = getNumber(formData.endereco.cep);
+        setIsFetchingCep(true);
+        const endereco = await getByCep(cep);
+        if (endereco.logradouro === undefined) {
+            setCepError("Cep informado não encontrado");
+        }
+        setIsFetchingCep(false);
+        setFormData({
+                ...formData,
+                endereco: {
+                    ...formData.endereco,
+                    logradouro: endereco.logradouro || formData.endereco.logradouro,
+                    bairro: endereco.bairro || formData.endereco.bairro,
+                    cidade: endereco.cidade || formData.endereco.cidade,
+                    uf: endereco.uf || formData.endereco.uf,
+                    numero: "",
+                    complemento: "",
+                },
+            });
+
+        setCepError(null);
+    };
+
     return (
         <CustomCard>
             <form action="POST" onSubmit={handleSubmit} className="w-full flex flex-col gap-8">
@@ -236,28 +266,39 @@ export const FormCliente = ({ initialData, onSubmit, isLoading, errors }: FormCl
                 <h3 className="text-md font-semibold border-b-2 pb-2">Endereço</h3>
                 <div className="grid grid-cols-1 md:grid-cols-[calc(30%-0.5rem)_calc(60%-0.5rem)_calc(10%-0.5rem)] gap-2">
                     <CustomInput
-                        onChange={(e) => setFormData({ ...formData, endereco: { ...formData.endereco, cep: e.target.value } })}
+                        onChange={(e) =>
+                            setFormData({
+                                ...formData,
+                                endereco:
+                                {
+                                    ...formData.endereco,
+                                    cep: maskerHelper.cep(e.target.value)
+                                }
+                            })}
                         label="CEP"
+                        onBlur={gerarEndereco}
                         id="cep"
-                        defaultValue={formData.endereco.cep}
+                        maxLength={9}
+                        value={formData.endereco.cep}
                         placeholder="Digite o CEP do cliente"
-                        errorMessage={getFieldError("endereco", "cep")}
+                        errorMessage={cepError || getFieldError("endereco", "cep")}
                         required
                     />
                     <CustomInput
                         onChange={(e) => setFormData({ ...formData, endereco: { ...formData.endereco, logradouro: e.target.value } })}
                         label="Endereço"
                         id="endereco"
-                        defaultValue={formData.endereco.logradouro}
+                        value={formData.endereco.logradouro}
                         placeholder="Digite o Endereço do cliente"
                         errorMessage={getFieldError("endereco", "logradouro")}
+                        isLoading={isFetchingCep}
                         required
                     />
                     <CustomInput
                         onChange={(e) => setFormData({ ...formData, endereco: { ...formData.endereco, numero: e.target.value } })}
                         label="Número"
                         id="numero"
-                        defaultValue={formData.endereco.numero}
+                        value={formData.endereco.numero}
                         placeholder="Digite o número do endereço"
                         errorMessage={getFieldError("endereco", "numero")}
                     />
@@ -268,7 +309,7 @@ export const FormCliente = ({ initialData, onSubmit, isLoading, errors }: FormCl
                         onChange={(e) => setFormData({ ...formData, endereco: { ...formData.endereco, complemento: e.target.value } })}
                         label="Complemento"
                         id="complemento"
-                        defaultValue={formData?.endereco.complemento}
+                        value={formData?.endereco.complemento}
                         placeholder="Digite o complemento do endereço"
                         errorMessage={getFieldError("endereco", "complemento")}
                     />
@@ -276,28 +317,31 @@ export const FormCliente = ({ initialData, onSubmit, isLoading, errors }: FormCl
                         onChange={(e) => setFormData({ ...formData, endereco: { ...formData.endereco, bairro: e.target.value } })}
                         label="Bairro"
                         id="bairro"
-                        defaultValue={formData?.endereco.bairro}
+                        value={formData?.endereco.bairro}
                         placeholder="Digite o bairro do cliente"
                         errorMessage={getFieldError("endereco", "bairro")}
                         required
+                        isLoading={isFetchingCep}
                     />
                     <CustomInput
                         onChange={(e) => setFormData({ ...formData, endereco: { ...formData.endereco, cidade: e.target.value } })}
                         label="Cidade"
                         id="cidade"
-                        defaultValue={formData?.endereco.cidade}
+                        value={formData?.endereco.cidade}
                         placeholder="Digite a cidade do cliente"
                         errorMessage={getFieldError("endereco", "cidade")}
                         required
+                        isLoading={isFetchingCep}
                     />
                     <CustomInput
                         onChange={(e) => setFormData({ ...formData, endereco: { ...formData.endereco, uf: e.target.value } })}
                         label="UF"
                         id="uf"
-                        defaultValue={formData?.endereco.uf}
+                        value={formData?.endereco.uf}
                         placeholder="UF"
                         errorMessage={getFieldError("endereco", "uf")}
                         required
+                        isLoading={isFetchingCep}
                     />
                 </div>
 

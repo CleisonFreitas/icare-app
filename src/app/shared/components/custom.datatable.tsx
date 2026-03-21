@@ -87,14 +87,14 @@ export function CustomDataTable<T extends object>({
                         {data.map((row, index) => (
                             <tr
                                 key={index}
-                                className="border-t hover:bg-gray-50 transition"
+                                className="border-t hover:bg-orange-100 transition"
                             >
                                 {columns.map((col) => (
                                     <td
                                         key={String(col.accessor)}
-                                        className={`p-3 text-sm ${col.clickable
-                                            ? "text-blue-600 cursor-pointer hover:underline"
-                                            : ""
+                                        className={`p-3 text-sm text-nowrap font-bold ${col.clickable
+                                            ? "text-orange-600 cursor-pointer hover:underline"
+                                            : "text-gray-600"
                                             }`}
                                         onClick={() =>
                                             col.clickable && col.onClick?.(row)

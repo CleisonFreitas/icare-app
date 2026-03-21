@@ -27,14 +27,18 @@ export const ClientePesquisaPage = () => {
                 page,
                 limite: limit,
                 ordenar_por: sort.field,
-                direcao: sort.direction
+                direcao: sort.direction ?? "desc"
             }),
         placeholderData: keepPreviousData
     })
     return (
         <>
             <span className="w-full md:w-[200px] self-end">
-                <CustomButton icon={<FaUserPlus />} onClick={() => openForm()}>
+                <CustomButton
+                    icon={<FaUserPlus />}
+                    onClick={() => openForm()}
+                    size={'large'}
+                >
                     Cadastrar
                 </CustomButton>
             </span>
