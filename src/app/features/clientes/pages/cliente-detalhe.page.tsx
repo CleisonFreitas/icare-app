@@ -1,8 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { DetalhesCliente } from "../components/detalhes-cliente";
 import { useCliente } from "../hooks/cliente.hook";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TabsContent } from "@radix-ui/react-tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LoadingOverlay } from "@/app/shared/components/screen.loading";
 import { TextButton } from "@/app/shared/components/text.button";
 import { FaArrowAltCircleLeft } from "react-icons/fa";
